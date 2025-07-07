@@ -1,16 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NgIf } from '@angular/common';
 
 declare module 'html2pdf.js';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NgIf],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'test-print';
+  loading = false;
+  showPrintSection = false;
 
   // Download PDF only
   downloadPdf() {
@@ -65,5 +68,72 @@ export class AppComponent {
     } else {
       console.error('[Print] Element not found!');
     }
+  }
+
+  /**
+   * Download or print the content of #print-section as PDF
+   * @param isPrint If true, will print the PDF, otherwise download
+   */
+  async handlePdf(isPrint = false) {
+    this.showPrintSection = true;
+    console.log(`[PDF] Preparing to ${isPrint ? 'print' : 'download'}...`);
+    setTimeout(async () => {
+      this.loading = true;
+      const element = document.getElementById('print-section');
+      if (!element) {
+        console.error('[PDF] Element not found!');
+        this.loading = false;
+        this.showPrintSection = false;
+        return;
+      }
+      const options = {
+        filename: 'Demo_Report.pdf',
+        margin: [10, 7, 10, 7],
+        html2canvas: { scale: 3, x: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      };
+      try {
+        console.log('[PDF] Generating PDF...');
+        const html2pdfmod = await import('html2pdf.js');
+        const worker = html2pdfmod.default().set(options).from(element);
+        const pdfBlob = await worker.outputPdf('blob');
+        console.log('[PDF] PDF Blob generated.');
+        const url = window.URL.createObjectURL(pdfBlob);
+        if (isPrint) {
+          console.log('[PDF] Opening print dialog for PDF...');
+          const printWindow = window.open(url, '_blank');
+          if (printWindow) {
+            printWindow.onload = () => {
+              printWindow.focus();
+              printWindow.print();
+              printWindow.onafterprint = () => {
+                printWindow.close();
+                window.URL.revokeObjectURL(url);
+                console.log('[PDF] Print dialog closed and blob revoked.');
+              };
+            };
+          } else {
+            console.error('[PDF] Could not open print window.');
+          }
+        } else {
+          console.log('[PDF] Triggering download...');
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = options.filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            console.log('[PDF] Download complete and blob revoked.');
+          }, 100);
+        }
+      } catch (error) {
+        console.error('[PDF] Error:', error);
+      } finally {
+        this.loading = false;
+        this.showPrintSection = false;
+      }
+    }, 1);
   }
 }

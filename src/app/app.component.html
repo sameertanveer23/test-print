@@ -202,8 +202,8 @@
             cx="0"
             cy="0"
             r="1"
-            gradientTransform="rotate(118.122 171.182 60.81) scale(205.794)"
-            gradientUnits="userSpaceOnUse"
+            gradient-transform="rotate(118.122 171.182 60.81) scale(205.794)"
+            gradient-units="userSpaceOnUse"
           >
             <stop stop-color="#FF41F8" />
             <stop offset=".707" stop-color="#FF41F8" stop-opacity=".5" />
@@ -215,7 +215,7 @@
             x2="982"
             y1="192"
             y2="192"
-            gradientUnits="userSpaceOnUse"
+            gradient-units="userSpaceOnUse"
           >
             <stop stop-color="#F0060B" />
             <stop offset="0" stop-color="#F0070C" />
@@ -243,7 +243,7 @@
         </p>
       </div>
       <button
-        (click)="downloadPdf()"
+        (click)="handlePdf(false)"
         style="
           margin-top: 1rem;
           margin-right: 1rem;
@@ -259,7 +259,7 @@
         Download PDF
       </button>
       <button
-        (click)="printPage()"
+        (click)="handlePdf(true)"
         style="
           margin-top: 1rem;
           padding: 0.5rem 1.5rem;
@@ -273,6 +273,12 @@
       >
         Print
       </button>
+      <div
+        *ngIf="loading"
+        style="margin-top: 1rem; color: #1976d2; font-weight: bold"
+      >
+        Processing PDF, please wait...
+      </div>
     </div>
     <div class="divider" role="separator" aria-label="Divider"></div>
     <div class="right-side">
